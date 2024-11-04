@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SettingsFragment"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:gravity="center"
+            android:text="회원정보 수정"
+            android:textColor="@color/black"
+            android:textAlignment="center"
+            android:textSize="24sp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/changePW"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:text="비밀번호 변경" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/changeBabyName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:text="태명 변경" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/changeDDay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"            android:background="@drawable/btn1"
+            android:text="출산 예정일 변경" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/changeEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn1"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:text="이메일 변경" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/changeBabyPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:text="아기 사진 설정" />
+    </LinearLayout>
+
+</FrameLayout>

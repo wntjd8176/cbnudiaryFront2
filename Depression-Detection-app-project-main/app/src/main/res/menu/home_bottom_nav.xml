@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/ic_calendar"
+        android:title="캘린더"
+        android:icon="@drawable/ic_calendar"/>
+    <item
+        android:id="@+id/ic_home"
+        android:title="home"
+        android:icon="@drawable/ic_home"/>
+    <item
+        android:id="@+id/ic_diary"
+        android:title="일기"
+        android:icon="@drawable/ic_diary"/>
+    <item
+        android:id="@+id/ic_community"
+        android:title="커뮤니티"
+        android:icon="@drawable/ic_home"/>
+    <item
+        android:id="@+id/ic_settings"
+        android:title="설정"
+        android:icon="@drawable/ic_settings"/>
+</menu>

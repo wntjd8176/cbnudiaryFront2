@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SettingsFragment"
+    android:background="@color/white"
+    >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:gravity="center"
+            android:text="환경설정"
+            android:textColor="@color/black"
+            android:textAlignment="center"
+            android:textSize="24sp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/chage_uesr_info_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/btn1"
+            android:text="회원정보 수정" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/restore_diary_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:text="일기 복구기능" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/export_diary_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:text="일기 내보내기" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/alarm_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:paddingBottom="10dp"
+            android:text="알림 설정" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/withdrawal_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:layout_marginBottom="10dp"
+            android:text="회원탈퇴" />
+    </LinearLayout>
+
+</FrameLayout>

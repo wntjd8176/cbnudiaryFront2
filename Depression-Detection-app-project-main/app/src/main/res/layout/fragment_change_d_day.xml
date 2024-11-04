@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BabyNameFragment"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:gravity="center"
+            android:text="출산 예정일 변경"
+            android:textColor="@color/black"
+            android:textAlignment="center"
+            android:textSize="24sp" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/year_change_d_day"
+                android:layout_width="80dp"
+                android:layout_height="70dp"
+                android:ems="10"
+                android:hint="2024"
+                android:inputType="date"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/dash3"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:height="65dp"
+                android:gravity="center"
+                android:text="년"
+                android:textAlignment="center"
+                android:textSize="20sp" />
+
+            <EditText
+                android:id="@+id/month_change_d_day"
+                android:layout_width="80dp"
+                android:layout_height="70dp"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="01"
+                android:inputType="date"
+                android:maxLength="2"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/dash4"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:height="65dp"
+                android:gravity="center"
+                android:text="월"
+                android:textAlignment="center"
+                android:textSize="20sp" />
+
+            <EditText
+                android:id="@+id/day_change_d_day"
+                android:layout_width="80dp"
+                android:layout_height="70dp"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="01"
+                android:inputType="date"
+                android:maxLength="2"
+                android:textAlignment="center" />
+            <TextView
+                android:id="@+id/dash5"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:height="65dp"
+                android:gravity="center"
+                android:text="일"
+                android:textAlignment="center"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/change_change_d_day_button"
+            android:layout_width="108dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="30dp"
+            android:padding="5dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/btn1"
+            android:text="변경하기" />
+
+    </LinearLayout>
+</FrameLayout>

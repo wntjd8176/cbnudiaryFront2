@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SearchFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:gravity="center"
+            android:text="검색 페이지"
+            android:textAlignment="center"
+            android:textSize="20sp" />
+
+        <android.widget.SearchView
+            android:id="@+id/search_page"
+            android:layout_width="match_parent"
+            android:layout_height="73dp"
+            android:layout_marginStart="30dp"
+            android:background="@drawable/diary_content_border"
+            android:layout_marginEnd="30dp" />
+
+        <ListView
+            android:id="@+id/searchListView"
+            android:layout_width="match_parent"
+            android:layout_height="397dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp">
+
+        </ListView>
+    </LinearLayout>
+
+</FrameLayout>
