@@ -1,5 +1,7 @@
 package com.example.diaryapp
 
+import com.example.diaryapp.Network.SmsService
+import com.example.diaryapp.Network.RetrofitInstance
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
@@ -8,6 +10,8 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
+import com.example.diaryapp.Serivce.CoolSmsService
 
 class RegisterPage : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,19 +45,32 @@ class RegisterPage : AppCompatActivity() {
         val regexYear = Regex("^[\\s0-9]{4}$")
         val regexDay = Regex("^[\\s0-9]{2}$")
 
+
+        val coolSmsService = RetrofitInstance.create(CoolSmsService::class.java)
+        val smsService = SmsService(coolSmsService)
+
         validateBtn.setOnClickListener {
             // 표현식 확인
             if (inputName.text.toString().matches(regexName)
                 && inputPhone2.text.toString().matches(regexPhone)
                 && inputPhone3.text.toString().matches(regexPhone)) {
                 // DB에 이름, 전화번호가 등록되지 않은 경우
-                val t = true
-                if (t){
-                    println("인증요청중")
-                    // 인증하는 코드 작성 필요
-                } else {    // DB에 이름, 전화번호가 등록된 경우
-                    val builder = Dialog("회원가입","가입된 정보가 있습니다.")
-                    builder.show()
+                val fullPhoneNumber = "010" + inputPhone2.text.toString() + inputPhone3.text.toString()
+
+
+                // 서버로 SMS 인증 요청을 보내는 함수 호출
+
+                //val t = true
+                smsService.sendSms(fullPhoneNumber) { success, message ->
+                    if (success) {
+                        // 성공 시: 인증 코드 전송 성공 메시지 표시
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        println("인증 요청 중")
+                        // 인증하는 코드 작성 필요
+                    } else {    // DB에 이름, 전화번호가 등록된 경우
+                        val builder = Dialog("회원가입", "가입된 정보가 있습니다.")
+                        builder.show()
+                    }
                 }
 
             } else {    // 입력 오류인 경우
@@ -94,8 +111,25 @@ class RegisterPage : AppCompatActivity() {
         }
 
         validateChkBtn.setOnClickListener {
-            val builder = Dialog("인증번호 확인","인증번호가 확인되었습니다.")
-            builder.show()
+            val fullPhoneNumber = "010" + inputPhone2.text.toString() + inputPhone3.text.toString() // 전체 전화번호
+            val code = validateNumber.text.toString() // 사용자가 입력한 인증 코드
+
+            if (code.isNotEmpty()) {
+                smsService.verifyCode(fullPhoneNumber, code) { success, message ->
+                    val builder = if (success) {
+                        // 성공 시: 인증번호 확인 메시지 표시
+                        Dialog("인증번호 확인", "인증번호가 확인되었습니다.")
+                    } else {
+                        // 실패 시: 오류 메시지 표시
+                        Dialog("인증번호 확인", message ?: "유효하지 않거나 만료된 인증번호입니다.")
+                    }
+                    builder.show()
+                }
+            } else {
+                // 입력 오류 시: 코드가 비어 있을 경우 알림
+                val builder = Dialog("인증번호 확인", "인증번호를 입력해 주세요.")
+                builder.show()
+            }
         }
     }
 
