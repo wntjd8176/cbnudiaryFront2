@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@color/white"
     android:layout_height="match_parent">
 
     <LinearLayout
@@ -14,8 +15,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.8">
+        app:layout_constraintTop_toTopOf="parent">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -24,13 +24,17 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
                 android:orientation="vertical" >
 
                 <TextView
                     android:id="@+id/registerTextView"
                     android:layout_width="match_parent"
-                    android:layout_height="43dp"
+                    android:layout_height="wrap_content"
                     android:text="회원가입"
+                    android:layout_marginTop="50dp"
+                    android:layout_marginBottom="10dp"
                     android:textAlignment="center"
                     android:textSize="24sp" />
 
@@ -111,6 +115,36 @@
                         android:layout_weight="1"
                         android:background="@drawable/btn1"
                         android:text="인증요청" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="15dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_weight="2"
+                        android:layout_height="match_parent">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/validate_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="인증번호 입력" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/validate_chk_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="10dp"
+                        android:background="@drawable/btn1"
+                        android:text="인증번호확인" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -279,13 +313,15 @@
 
                 </LinearLayout>
 
+
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/signUp"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:layout_margin="5dp"
+                    android:layout_marginTop="5dp"
                     android:background="@drawable/btn1"
                     android:text="가입하기"
+                    android:layout_marginBottom="40dp"
                     android:textAlignment="center"
                     android:textSize="20sp" />
 
@@ -293,5 +329,6 @@
         </ScrollView>
 
     </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

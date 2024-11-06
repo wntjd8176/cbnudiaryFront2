@@ -31,6 +31,9 @@ class RegisterPage : AppCompatActivity() {
         var duplicateIDBtn: Button = findViewById(R.id.duplicateID_register)
         var signUp: Button = findViewById(R.id.signUp)
 
+        var validateNumber: EditText = findViewById(R.id.validate_number)
+        var validateChkBtn: Button = findViewById(R.id.validate_chk_button)
+
         val regexEmail = Regex("""^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})${'$'}""")
         val regexID = Regex("^[A-Za-z0-9]+\$")
         val regexName = Regex("^[\\s가-힣a-zA-Z]{2,20}$")
@@ -85,8 +88,14 @@ class RegisterPage : AppCompatActivity() {
             // 유효하지 않은 입력값이 있는지 확인 필요
             // 비밀번호 일치 여부 확인
 
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, wordsPage::class.java)
             startActivity(intent)
+            finish()
+        }
+
+        validateChkBtn.setOnClickListener {
+            val builder = Dialog("인증번호 확인","인증번호가 확인되었습니다.")
+            builder.show()
         }
     }
 
