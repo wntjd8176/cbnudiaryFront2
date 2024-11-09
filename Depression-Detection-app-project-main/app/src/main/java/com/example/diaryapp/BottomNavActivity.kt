@@ -1,5 +1,6 @@
 package com.example.diaryapp
-
+import com.example.diaryapp.Network.RetrofitInstance
+import com.example.diaryapp.Serivce.UserApiService
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -7,8 +8,14 @@ import androidx.fragment.app.FragmentManager
 import com.example.diaryapp.databinding.HomeBinding
 import java.text.SimpleDateFormat
 import java.util.Date
+import android.widget.Toast
 import java.io.Serializable
-
+import android.content.Context
+import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 private const val TAG_CALENDAR = "ic_calendar"
 private const val TAG_HOME = "ic_home"
 private const val TAG_Diary = "ic_diary"
@@ -16,8 +23,9 @@ private const val TAG_Save_Diary = "ic_save_diary"
 private const val TAG_Community = "ic_community"
 private const val TAG_Settings = "ic_settings"
 
-class BottomNavActivity : AppCompatActivity(), Serializable  {
 
+class BottomNavActivity : AppCompatActivity(), Serializable  {
+    private val userApiService = RetrofitInstance.create(UserApiService::class.java)
     private lateinit var binding : HomeBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +42,13 @@ class BottomNavActivity : AppCompatActivity(), Serializable  {
             when(item.itemId) {
                 R.id.ic_calendar-> setFragment(TAG_CALENDAR, CalendarFragment())
                 R.id.ic_home -> setFragment(TAG_HOME, HomeFragment())
-                R.id.ic_community -> setFragment(TAG_Community, CommunityFragment())
+
+                R.id.ic_community -> {
+
+
+                    checkUserPregnancyStatus()
+
+                }
                 R.id.ic_settings -> setFragment(TAG_Settings, SettingsFragment())
                 R.id.ic_diary -> {
                     if (checkDiary(todayDate)) {
@@ -45,6 +59,61 @@ class BottomNavActivity : AppCompatActivity(), Serializable  {
                 }
             }
             true
+        }
+    }
+
+    private fun savePregnancyStatusToPreferences(userID:String,isPregnant: Boolean) {
+        val sharedPref = getSharedPreferences("MyAppPref", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putBoolean("isPregnantVerified", isPregnant)
+            apply()
+        }
+    }
+    private fun getPregnancyStatusFromPreferences(userID: String): Boolean {
+        val sharedPref = getSharedPreferences("MyAppPref", Context.MODE_PRIVATE)
+        return sharedPref.getBoolean("isPregnantVerified_$userID", false) // 사용자별로 상태 조회
+    }
+    private fun checkUserPregnancyStatus() {
+        val userID = Myapp.getPreferences().getString("loggedInUserId", null)
+        if (userID.isNullOrEmpty()) {
+            Toast.makeText(this, "로그인 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val cachedStatus = getPregnancyStatusFromPreferences(userID)
+       /* val sharedPref = getSharedPreferences("MyAppPref", Context.MODE_PRIVATE)
+        val cachedStatus = sharedPref.getBoolean("isPregnantVerified", false)
+*/
+        if (cachedStatus) {
+            // 캐싱된 상태를 사용
+            setFragment(TAG_Community, CommunityFragment())
+            return
+        }
+
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = userApiService.getUserStatus(userID)
+                if (response.isSuccessful) {
+                    val userStatus = response.body()
+                    if (userStatus?.prg == 1) {
+                        // 임산부 인증 상태
+                        savePregnancyStatusToPreferences(userID,true)
+                        withContext(Dispatchers.Main) {
+                            setFragment(TAG_Community, CommunityFragment())
+                        }
+                    } else {
+                        // 인증되지 않은 상태
+                        savePregnancyStatusToPreferences(userID,false)
+                        withContext(Dispatchers.Main) {
+                            setFragment(TAG_Community, ChkpregnantPage())
+                        }
+                    }
+                } else {
+                    Log.e("UserStatus", "Failed to fetch user status: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("UserStatus", "Error fetching user status", e)
+            }
         }
     }
 
@@ -123,6 +192,7 @@ class BottomNavActivity : AppCompatActivity(), Serializable  {
 
         fragTransaction.commitAllowingStateLoss()
     }
+
 
     fun setSelectedNavItem(itemId: Int) {
         binding.homeBottomNav.selectedItemId = itemId

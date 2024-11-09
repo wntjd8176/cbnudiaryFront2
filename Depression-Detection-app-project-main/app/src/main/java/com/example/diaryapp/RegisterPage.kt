@@ -2,9 +2,11 @@ package com.example.diaryapp
 
 import com.example.diaryapp.Network.SmsService
 import com.example.diaryapp.Network.RetrofitInstance
+import com.example.diaryapp.Serivce.UserApiService.UserDTO
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -13,6 +15,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.Toast
 import com.example.diaryapp.Serivce.CoolSmsService
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+import com.example.diaryapp.Serivce.UserApiService
 class RegisterPage : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +56,7 @@ class RegisterPage : AppCompatActivity() {
 
         val coolSmsService = RetrofitInstance.create(CoolSmsService::class.java)
         val smsService = SmsService(coolSmsService)
+        var isIDAvailable = false
 
         validateBtn.setOnClickListener {
             // 표현식 확인
@@ -82,32 +91,112 @@ class RegisterPage : AppCompatActivity() {
 
 
         duplicateIDBtn.setOnClickListener {
-            // DB에서 중복 아이디가 있는지 확인하는 코드 작성 필요
-            println(inputID.text.toString())
-            if (inputID.text.toString().matches(regexID)) {
-                val message = false
-                if (message) {
-                    val builder = Dialog("아이디 중복 확인","사용 가능한 아이디 입니다.")
-                    builder.show()
-                } else {
-                    val builder = Dialog("아이디 중복 확인","이미 사용중인 아이디 입니다.\n아이디를 다시 입력해주세요.")
-                    builder.show()
+            val inputIdText = inputID.text.toString()
+
+            if (inputIdText.matches(regexID)) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        // 서버에 중복 아이디 확인 요청 (예시: checkIDAvailability 메서드)
+                        val userApiService = RetrofitInstance.create(UserApiService::class.java)
+                        val response = userApiService.checkIDAvailability(inputIdText)
+
+                        withContext(Dispatchers.Main) {
+                            if (response.isSuccessful && response.body() == true) {
+                                isIDAvailable = true // 사용 가능한 아이디
+                                val builder = Dialog("아이디 중복 확인", "사용 가능한 아이디 입니다.")
+                                builder.show()
+                            } else {
+                                isIDAvailable = false // 이미 사용 중인 아이디
+                                val builder = Dialog("아이디 중복 확인", "이미 사용중인 아이디 입니다.\n아이디를 다시 입력해주세요.")
+                                builder.show()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("API_CALL", "Error occurred during ID check: ${e.message}", e)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@RegisterPage, "아이디 중복 확인 중 오류 발생", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 }
-            }
-            else {
-                val builder = Dialog("아이디 중복 확인","아이디 입력이 잘못되었습니다.")
+            } else {
+                val builder = Dialog("아이디 중복 확인", "아이디 입력이 잘못되었습니다.")
                 builder.show()
             }
         }
 
         signUp.setOnClickListener {
+            if (!isIDAvailable) {
+                Toast.makeText(this@RegisterPage, "아이디 중복 확인을 해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             // 입력되지 않은 곳이 있는지
             // 유효하지 않은 입력값이 있는지 확인 필요
+            if (inputID.text.isNullOrBlank() || inputPW1.text.isNullOrBlank() ||
+                inputName.text.isNullOrBlank() || inputBabyName.text.isNullOrBlank() ||
+                inputEmail.text.isNullOrBlank()) {
+                Toast.makeText(this@RegisterPage, "모든 입력값을 작성해 주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             // 비밀번호 일치 여부 확인
+            if (inputPW1.text.toString() != inputPW2.text.toString()) {
+                Toast.makeText(this@RegisterPage, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            val intent = Intent(this, wordsPage::class.java)
-            startActivity(intent)
-            finish()
+            try{
+                val userDTO = UserDTO(
+                    userID = inputID.text.toString(),
+                    userPW = inputPW1.text.toString(),
+                    name = inputName.text.toString(),
+                    babyname=  inputBabyName.text.toString(),
+                    preg = 0,
+                    email= inputEmail.text.toString()
+                )
+
+
+
+
+            CoroutineScope(Dispatchers.IO).launch {
+
+                try{
+                    val userApiService = RetrofitInstance.create(UserApiService::class.java)
+                    val response = userApiService.registUser(userDTO)
+                    Log.d("API_RESPONSE", "Response Code: ${response.code()}, Message: ${response.message()}")
+
+                    if (response.isSuccessful) {
+                        // 성공 시 메인 스레드에서 Fragment 전환
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@RegisterPage, "회원가입 성공!", Toast.LENGTH_SHORT).show()
+                            val intent = Intent(this@RegisterPage, wordsPage::class.java)
+                            startActivity(intent)
+                            finish()
+                        }
+                    } else {
+                        // 실패 시 메인 스레드에서 오류 메시지 표시
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@RegisterPage, "회원가입 실패: ${response.message()}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    // 예외 처리
+                    Log.e("API_CALL", "Error occurred during API call: ${e.message}", e)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@RegisterPage, "API 호출 중 오류 발생", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@RegisterPage, "회원가입 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+        }
+
+
+
+
+
+
+
         }
 
         validateChkBtn.setOnClickListener {

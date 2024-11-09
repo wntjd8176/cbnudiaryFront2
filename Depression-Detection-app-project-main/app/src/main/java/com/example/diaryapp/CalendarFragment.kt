@@ -1,5 +1,6 @@
 package com.example.diaryapp
-
+import com.example.diaryapp.Serivce.DiaryApiService
+import com.example.diaryapp.Network.RetrofitInstance
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -14,13 +15,19 @@ import android.widget.SearchView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
 import java.util.Date
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import android.widget.Toast
 
 private const val TAG_Diary = "ic_diary"
 
 class CalendarFragment : Fragment() {
     private lateinit var bottomNavActivity: BottomNavActivity
     private lateinit var listView: ListView
-
+    private val diaryApiService :DiaryApiService = RetrofitInstance.create(DiaryApiService::class.java)
+    private var selectedDate: String = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity?.let {
@@ -45,7 +52,8 @@ class CalendarFragment : Fragment() {
         var selectedDate = todayDate
 
         listView = rootView.findViewById(R.id.calendarListView)
-        updateListView(todayDate, addButton) // 오늘 날짜로 초기화
+        fetchDiaries(todayDate, addButton)
+       // updateListView(todayDate, addButton) // 오늘 날짜로 초기화
 
         sv.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -91,8 +99,8 @@ class CalendarFragment : Fragment() {
         clickedDate.setOnDateChangeListener { _, year, month, dayOfMonth ->
             selectedDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
             Log.i("SelectedDate", selectedDate)
-
-            updateListView(selectedDate, addButton)
+            fetchDiaries(selectedDate, addButton)
+           // updateListView(selectedDate, addButton)
         }
 
         addButton.setOnClickListener {
@@ -128,23 +136,51 @@ class CalendarFragment : Fragment() {
         return rootView
     }
 
-    private fun updateListView(selectedDate: String, addButton: FloatingActionButton) {
-        val diaryEntries = test()
+    private fun fetchDiaries(date: String, addButton: FloatingActionButton) {
+        val userID = Myapp.getPreferences().getString("loggedInUserId", null)
+
+        if (userID.isNullOrEmpty()) {
+            Log.e("CalendarFragment", "User ID is null")
+            Toast.makeText(requireContext(), "로그인 정보가 없습니다.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = diaryApiService.getDiaryList(userID, date)
+                if (response.isSuccessful) {
+                    val diaryEntries = response.body() ?: emptyList()
+                    withContext(Dispatchers.Main) {
+                        updateListView(diaryEntries, addButton)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "일기를 가져오는 데 실패했습니다.", Toast.LENGTH_SHORT).show()
+                    }
+                    Log.e("CalendarFragment", "Failed to fetch diaries: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "오류가 발생했습니다: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+                Log.e("CalendarFragment", "Error fetching diaries", e)
+            }
+        }
+    }
+
+    private fun updateListView(diaryEntries:List<DiaryApiService.DiaryDTO>, addButton: FloatingActionButton) {
+
         val diaryList: MutableList<String> = mutableListOf()
 
         for (diaryEntry in diaryEntries) {
-            val date = diaryEntry.date
-
-            if (date == selectedDate) {
-                val contentPreview = if (diaryEntry.content.length > 30) {
-                    "${diaryEntry.content.substring(0, 30)}..."
-                } else {
-                    diaryEntry.content
-                }
-                val tmp = "${diaryEntry.title}\n$contentPreview"
-                diaryList.add(tmp)
-                addButton.visibility = View.GONE
+            val contentPreview = if (diaryEntry.diaryContent.length > 30) {
+                "${diaryEntry.diaryContent.substring(0, 30)}..."
+            } else {
+                diaryEntry.diaryContent
             }
+            val tmp = "${diaryEntry.dtitle}\n$contentPreview"
+            diaryList.add(tmp)
+
         }
 
         if (diaryList.isEmpty()) {

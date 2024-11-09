@@ -32,7 +32,7 @@ import android.widget.Toast
 
 class WriteDiaryFragment : Fragment() {
     val options = arrayOf("좋음", "슬픔", "화남", "우울", "무감정")
-
+    private var userdfID: String? = null
     private val diaryApi by lazy { RetrofitInstance.create(DiaryApiService::class.java) }
 
     private var selectedDateWD: String? = null
@@ -53,6 +53,7 @@ class WriteDiaryFragment : Fragment() {
                 it.getSerializable(ARG_BOTTOM_NAV_ACTIVITY) as? BottomNavActivity
                     ?: throw IllegalArgumentException("BottomNavActivity must not be null")
         }
+
     }
 
 
@@ -73,6 +74,18 @@ class WriteDiaryFragment : Fragment() {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         var todayDate = dateFormat.format(Date()) // 현재 날짜와 시간을 포함한 형식
         //var todayDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
+
+        val userdfID = Myapp.getPreferences().getString("loggedInUserId", null)
+        if (userdfID == null) {
+            Toast.makeText(requireContext(), "로그인된 사용자 정보가 없습니다. 다시 로그인해주세요.", Toast.LENGTH_SHORT).show()
+
+        }
+        if (userdfID != null) {
+            // 필요한 작업 수행 (예: 로그 확인)
+            println("현재 로그인된 사용자 ID: $userdfID")
+        } else {
+            throw IllegalStateException("로그인된 사용자 정보가 없습니다. 다시 로그인하세요.")
+        }
 
         activity?.let {
             if (it is BottomNavActivity) {
@@ -105,6 +118,7 @@ class WriteDiaryFragment : Fragment() {
 
         Log.i("selectedDateWD:", selectedDateWD.toString())
         saveDiary.setOnClickListener {
+            val userdfID = Myapp.getPreferences().getString("loggedInUserId", null)
             try {
                 Log.d("API_CALL", "Attempting to save diary")
                 val diaryEntry= Diary(
@@ -117,12 +131,13 @@ class WriteDiaryFragment : Fragment() {
 
                 )
                 val diaryDTO = DiaryDTO(
-                    diaryUserID = "js1234", // 하드코딩된 userID
-                    createdDate = selectedDateWD ?: todayDate, // 선택된 날짜 또는 오늘 날짜
-                    dtitle = diaryTitle.text.toString(), // 일기 제목
+                    diaryUserID = userdfID ?: throw IllegalStateException("User ID is null"), // 하드코딩된 userID
+                    dtitle = diaryTitle.text.toString(), // 일기 제
                     diaryContent = diaryContent.text.toString(), // 일기 내용
+                    createdDate = selectedDateWD ?: todayDate, // 선택된 날짜 또는 오늘 날짜
                     emotions = emotionToInt(diaryEmotion.text.toString()) ?: 0,
                     resultEmotion = 0
+
                 )
 
 
@@ -285,7 +300,7 @@ class WriteDiaryFragment : Fragment() {
             dialog.dismiss()
             try {
                 val transaction = requireActivity().supportFragmentManager.beginTransaction()
-                val homeFragment = HomeFragment.newInstance("", "")
+                val homeFragment = HomeFragment.newInstance(bottomNavActivity)
                 transaction.replace(R.id.mainFrameLayout, homeFragment)
                 bottomNavActivity.setSelectedNavItem(R.id.ic_home)
 //                transaction.addToBackStack(null)
