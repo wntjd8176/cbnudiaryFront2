@@ -1,9 +1,12 @@
+package com.example.diaryapp
 data class HotPostItem (
-    val username:String,
-    val title: String,
-    val writeDate: String,
-    var content: String,
-    var like: String,
-    var comment: String
+    val userID:String,
+    val ptitle: String,
+     val pContent:String,
+    val  postType:String
+   // val writeDate: String
+
+   // var like: String,
+  //  var comment: String
 )
 

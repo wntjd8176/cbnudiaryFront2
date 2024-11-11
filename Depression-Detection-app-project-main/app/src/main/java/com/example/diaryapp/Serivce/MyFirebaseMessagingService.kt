@@ -10,18 +10,54 @@ import android.content.Context
 import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat
 import com.example.diaryapp.R
+import android.app.NotificationChannel
+import android.util.Log
+
+import android.os.Build
 class MyFirebaseMessagingService:FirebaseMessagingService(){
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // 메시지를 수신하면 알림을 표시
-        remoteMessage.notification?.let {
-            sendNotification(it.title, it.body)
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d("FCM", "Message data payload: ${remoteMessage.data}")
+
+            val messageType = remoteMessage.data["messageType"] ?: "default"
+
+
+            // 메시지 유형에 따라 알림 처리 분기
+            if (messageType == "depress_5") {
+                Log.d("FCM", "Depression alert triggered (5 times)")
+                //remoteMessage.notification?.let {
+                   sendNotification("우울감감지", "5회", true) // 5번째 알림일 때 Fragment로 이동
+                //}
+            } else {
+                Log.d("FCM", "General notification")
+                remoteMessage.notification?.let {
+                    sendNotification(it.title,it.body ,false) // 일반 알림
+                }
+            }
+        } else {
+            Log.d("FCM", "No data payload in message")
         }
     }
 
-    private fun sendNotification(title: String?, messageBody: String?) {
+    private fun sendNotification(title: String?, messageBody: String?,moveToFragment: Boolean) {
+        Log.d("FCM", "sendNotification called with title: $title, body: $messageBody, moveToFragment: $moveToFragment")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = "default_channel"
+            val channelName = "Default Channel"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelId, channelName, importance)
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager?.createNotificationChannel(channel)
+        }
         // MainActivity로 이동하는 인텐트 생성
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
+            if (messageBody=="5회") {
+                putExtra("openFragment", "LocateInfoFragment") // 5번째 알림일 경우 Fragment를 열 수 있도록 플래그 추가
+            }
         }
 
         // PendingIntent에 FLAG_IMMUTABLE 플래그 추가
@@ -29,7 +65,8 @@ class MyFirebaseMessagingService:FirebaseMessagingService(){
             this,
             0,
             intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            //PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
         // NotificationCompat.Builder 설정

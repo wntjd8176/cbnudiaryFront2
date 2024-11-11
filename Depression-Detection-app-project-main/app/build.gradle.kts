@@ -57,6 +57,7 @@ dependencies {
     implementation (platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation ("com.google.firebase:firebase-messaging")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation ("com.google.firebase:firebase-analytics")
 
     //Api호출을 위한 의존성추가
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")

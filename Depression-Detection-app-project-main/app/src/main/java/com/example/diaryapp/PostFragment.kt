@@ -1,7 +1,10 @@
 package com.example.diaryapp
-
+import com.example.diaryapp.Serivce.PostApiService
+import com.example.diaryapp.Serivce.PostApiService.CommentRequest
+import com.example.diaryapp.Network.RetrofitInstance
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +20,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import java.text.SimpleDateFormat
 import java.util.Date
-
+import com.example.diaryapp.HotPostItem
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.widget.Toast
+import android.content.SharedPreferences
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -26,10 +34,22 @@ class PostFragment : Fragment(), CommentAdapter.OnItemClickListener {
     private var postTitleText: String? = null
     private var postContentText: String? = null
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: CommentAdapter
+
+
+
+    private lateinit var commentAdapter: CommentAdapter
+    private val commentItemList: MutableList<CommentItem> = mutableListOf()
+
     private var userNameText: String? = null
     private var writeDateText: String? = null
-    private lateinit var commentItemList: List<CommentItem>
+
+    private lateinit var sharedPref: SharedPreferences
+   // private lateinit var commentItemList: List<CommentItem>
+
+ /*  private val sharedPref by lazy {
+       requireContext().getSharedPreferences("Myapp", Context.MODE_PRIVATE)
+   }*/
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +59,7 @@ class PostFragment : Fragment(), CommentAdapter.OnItemClickListener {
             userNameText = it.getString("userName")  // 키 이름 일치
             writeDateText = it.getString("writeDate")  // 키 이름 일치
         }
+        sharedPref = requireContext().getSharedPreferences("Myapp", Context.MODE_PRIVATE)
     }
 
     // 지금 코드는 그냥 제목, 유저이름, 내용을 전달받아서 그대로 띄워주고 있음
@@ -63,6 +84,19 @@ class PostFragment : Fragment(), CommentAdapter.OnItemClickListener {
         var imgView = rootView.findViewById<ImageView>(R.id.imageView1)
         var todayDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
 
+      /*  val postRecyclerView = rootView.findViewById<RecyclerView>(R.id.)
+        postRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        postAdapter = PostItemsAdapter(postList, requireContext(), this)
+        postRecyclerView.adapter = postAdapter
+*/
+        val commentRecyclerView = rootView.findViewById<RecyclerView>(R.id.comment_list)
+        commentRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        commentAdapter = CommentAdapter(commentItemList, requireContext(), this)
+        commentRecyclerView.adapter = commentAdapter
+
+
+        fetchComments()
+
         postTitle.text = postTitleText
         postContent.text = postContentText
         userNameView.text = userNameText
@@ -71,7 +105,18 @@ class PostFragment : Fragment(), CommentAdapter.OnItemClickListener {
 
 
         commentBtn.setOnClickListener {
-            commentInput.text.toString()
+           // commentInput.text.toString()
+            val commentText = commentInput.text.toString()
+            val userId = sharedPref.getString("loggedInUserId", null) ?: run {
+                Toast.makeText(requireContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (commentText.isNotEmpty()) {
+                addComment(postTitleText ?: "", userId, commentText)
+                commentInput.text.clear()
+            } else {
+                Toast.makeText(requireContext(), "Comment cannot be empty", Toast.LENGTH_SHORT).show()
+            }
             // 코멘트 디비 저장
         }
 
@@ -82,20 +127,20 @@ class PostFragment : Fragment(), CommentAdapter.OnItemClickListener {
 
 
 
-        commentItemList = mutableListOf(
+      /*  commentItemList = mutableListOf(
             CommentItem("user1", "2024-09-01", "testeddtset"),
             CommentItem("user2", "2024-09-01", "testeddtset2"),
             CommentItem("user3", "2024-09-01", "testeddtset3"),
             CommentItem("user4", "2024-09-01", "testeddtset4"),
             CommentItem("user5", "2024-09-01", "testeddtset5"),
 
-            )
+            )*/
 
-        recyclerView = rootView.findViewById(R.id.comment_list)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+       // recyclerView = rootView.findViewById(R.id.comment_list)
+       // recyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
 
-        adapter = CommentAdapter(commentItemList, requireContext(), this)
-        recyclerView.adapter = adapter
+      //  adapter = CommentAdapter(commentItemList, requireContext(), this)
+       // recyclerView.adapter = adapter
 
 
 
@@ -133,6 +178,79 @@ class PostFragment : Fragment(), CommentAdapter.OnItemClickListener {
 
         return rootView
     }
+    private fun fetchComments() {
+        val postApiService = RetrofitInstance.create(PostApiService::class.java)
+
+
+            postApiService.getCommentsForPost(postTitleText!!).enqueue(object : Callback<List<CommentItem>> {
+                override fun onResponse(call: Call<List<CommentItem>>, response: Response<List<CommentItem>>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        commentItemList.clear()
+                        commentItemList.addAll(response.body()!!)
+                        commentAdapter.notifyDataSetChanged()
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to load comments", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<List<CommentItem>>, t: Throwable) {
+                    Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+    private fun addComment(postId: String, userId: String, commentText: String) {
+
+        if (userId.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val postApiService = RetrofitInstance.create(PostApiService::class.java)
+        val commentRequest = CommentRequest(postId, userId, commentText)
+
+        postApiService.addComment(commentRequest).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), "Comment added successfully", Toast.LENGTH_SHORT).show()
+                    fetchComments() // Refresh comments
+                } else {
+                    Toast.makeText(requireContext(), "Failed to add comment", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+    private fun saveCommentToServer(commentText: String) {
+
+        val userId = requireContext().getSharedPreferences("Myapp", Context.MODE_PRIVATE)
+            .getString("loggedInUserId", null)
+
+        if (userId == null) {
+            Toast.makeText(requireContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        // Replace with actual API call to save a comment
+        val postApiService = RetrofitInstance.create(PostApiService::class.java)
+
+        val commentRequest = CommentRequest(postTitleText!!, userId,commentText)
+
+        postApiService.addComment(commentRequest).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    fetchComments() // Refresh comments after adding
+                } else {
+                    Toast.makeText(requireContext(), "Failed to add comment", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
 
     companion object {
         // TODO: Rename and change types and number of parameters

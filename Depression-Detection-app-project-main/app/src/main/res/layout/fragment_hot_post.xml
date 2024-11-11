@@ -66,6 +66,7 @@
 
         </LinearLayout>
 
+
         <TextView
             android:id="@+id/add_post"
             android:layout_width="wrap_content"

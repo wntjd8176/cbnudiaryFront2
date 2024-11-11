@@ -1,7 +1,8 @@
 package com.example.diaryapp
 
-import HotPostItem
-import android.content.Intent
+import com.example.diaryapp.HotPostItem
+import com.example.diaryapp.Network.RetrofitInstance
+import com.example.diaryapp.Serivce.PostApiService
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -14,7 +15,10 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
-
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.widget.Toast
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
@@ -25,7 +29,7 @@ class HotPostFragment : Fragment(), PostItemsAdapter.OnItemClickListener {
     private var param2: String? = null
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PostItemsAdapter
-    private lateinit var hotPostItemList: List<HotPostItem>
+    private  var hotPostItemList: MutableList<HotPostItem> = mutableListOf()
     private lateinit var clickedItem: HotPostItem
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,26 +45,29 @@ class HotPostFragment : Fragment(), PostItemsAdapter.OnItemClickListener {
     ): View? {
         // Inflate the layout for this fragment
         var rootView = inflater.inflate(R.layout.fragment_hot_post, container, false)
-        var drawerLayout = rootView.findViewById<DrawerLayout>(R.id.drawerLayout)
+        recyclerView = rootView.findViewById(R.id.hot_post_list)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+       var drawerLayout = rootView.findViewById<DrawerLayout>(R.id.drawerLayout)
         var imgMenu = rootView.findViewById<ImageView>(R.id.imageMenu)
         val addPost = rootView.findViewById<TextView>(R.id.add_post)
 
-        hotPostItemList = mutableListOf(
-            HotPostItem("user1", "title 1", "2024-09-01", "testetset", "2", "comm"),
-            HotPostItem("user2", "title 2", "2024-08-21", "testetset", "2", "comm"),
+        /*hotPostItemList = mutableListOf(
+            HotPostItem("user1", "title 1", "2024-09-01"),
+          /*  HotPostItem("user2", "title 2", "2024-08-21", "testetset", "2", "comm"),
             HotPostItem("user3", "title 3", "2024-08-31", "testetset", "2", "comm"),
             HotPostItem("user4", "title 4", "2024-08-31", "testetset", "2", "comm"),
             HotPostItem("user5", "title 5", "2024-08-31", "testetset", "2", "comm"),
             HotPostItem("user6", "title 6", "2024-08-31", "testetset", "2", "comm"),
-            HotPostItem("user7", "title 7", "2024-08-31", "testetset", "2", "comm"),
-        )
+            HotPostItem("user7", "title 7", "2024-08-31", "testetset", "2", "comm"),*/
+        ) */
 
-        recyclerView = rootView.findViewById(R.id.hot_post_list)
-        recyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+       // recyclerView = rootView.findViewById(R.id.hot_post_list)
+     //  recyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
 
         adapter = PostItemsAdapter(hotPostItemList, requireContext(), this)
         recyclerView.adapter = adapter
 
+        fetchPosts()
 
 
         addPost.setOnClickListener {
@@ -111,7 +118,25 @@ class HotPostFragment : Fragment(), PostItemsAdapter.OnItemClickListener {
 
         return rootView
     }
+    private fun fetchPosts() {
+        val postApiService = RetrofitInstance.create(PostApiService::class.java)
 
+        postApiService.getAllPosts().enqueue(object : Callback<List<HotPostItem>> {
+            override fun onResponse(call: Call<List<HotPostItem>>, response: Response<List<HotPostItem>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    hotPostItemList.clear()
+                    hotPostItemList.addAll(response.body()!!)
+                    adapter.notifyDataSetChanged()
+                } else {
+                    Toast.makeText(requireContext(), "Failed to load posts: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<HotPostItem>>, t: Throwable) {
+                Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
     companion object {
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
@@ -127,10 +152,10 @@ class HotPostFragment : Fragment(), PostItemsAdapter.OnItemClickListener {
         clickedItem = hotPostItemList[position]
         val postFragment = PostFragment().apply {
             arguments = Bundle().apply {
-                putString("postTitle", clickedItem.title)
-                putString("postContent", clickedItem.content)
-                putString("userName", clickedItem.username)
-                putString("writeDate", clickedItem.writeDate)
+                putString("postTitle", clickedItem.ptitle ?: "No Title")
+                putString("postContent", clickedItem.pContent ?: "No Content")
+                putString("userName", clickedItem.userID ?: "Unknown User")
+
             }
         }
 

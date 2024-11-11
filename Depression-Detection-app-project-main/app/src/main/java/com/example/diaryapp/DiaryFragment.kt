@@ -45,6 +45,16 @@ class DiaryFragment : Fragment() {
         var todayDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
         Log.i("selectedDate???", selectedDate.toString())
 
+        arguments?.let {
+            diaryDate.text = it.getString(todayDate)
+            diaryTitle.text = it.getString(ARG_TITLE)
+            diaryContent.text = it.getString(ARG_CONTENT)
+            diaryEmotion.text = it.getString(ARG_EMOTION)
+
+            val content = it.getString(ARG_CONTENT) ?: ""
+            diaryLength.text = "${content.length}/1000"
+        }
+
         if (selectedDate.isNullOrEmpty()) {
             diaryDate.text = todayDate
 
@@ -97,17 +107,36 @@ class DiaryFragment : Fragment() {
 
         return rootView
     }
+    fun mapEmotionToString(emotion: Int): String {
+        return when (emotion) {
+            1 -> "행복"
+            2 -> "슬픔"
+            3 -> "화남"
+            4 -> "우울"
+            5 -> "평온"
+            else -> "알 수 없음"
+        }
+    }
 
     companion object {
         private const val ARG_SELECTED_DATE = "selected_date"
         private const val ARG_BOTTOM_NAV_ACTIVITY = "bottom_nav_activity"
+        private const val ARG_TITLE = "title"
+        private const val ARG_CONTENT = "content"
+        private const val ARG_EMOTION = "emotion"
 
         @JvmStatic
-        fun newInstance(bottomNavActivity: BottomNavActivity, selectedDate: String?): DiaryFragment {
+        fun newInstance(bottomNavActivity: BottomNavActivity, selectedDate: String?,
+                        title: String?,
+                        content: String?,
+                        emotion: Int?): DiaryFragment {
             return DiaryFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_SELECTED_DATE, selectedDate.orEmpty())
                     putSerializable(DiaryFragment.ARG_BOTTOM_NAV_ACTIVITY, bottomNavActivity)
+                    putString(ARG_TITLE, title)
+                    putString(ARG_CONTENT, content)
+                    putString(ARG_EMOTION, emotion?.let { mapEmotionToString(it) })
                 }
             }
         }

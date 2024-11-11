@@ -1,5 +1,7 @@
 package com.example.diaryapp
-
+import com.example.diaryapp.Network.RetrofitInstance
+import com.example.diaryapp.Serivce.PostApiService
+import com.example.diaryapp.Serivce.PostApiService.PostRequest
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -17,6 +19,12 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import java.text.SimpleDateFormat
 import java.util.Date
+import retrofit2.Call
+import android.widget.Toast
+import android.content.Context
+import android.util.Log
+
+import android.content.SharedPreferences
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -30,16 +38,19 @@ private const val ARG_PARAM2 = "param2"
  */
 class WritePostFragment : Fragment() {
     // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+   /* private var param1: String? = null
+    private var param2: String? = null */
+    private lateinit var sharedPref: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
+        sharedPref = requireContext().getSharedPreferences("Myapp", Context.MODE_PRIVATE)
+    }
+      /*  arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
-        }
-    }
+        }*/
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,6 +73,9 @@ class WritePostFragment : Fragment() {
         var todayDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
 
 
+     /*   val sharedPref = requireContext().getSharedPreferences("MyApp", Context.MODE_PRIVATE)
+        val userId = sharedPref.getString("userId", null) ?: "Unknown UserID"
+                           */
         normalPostBtn.setOnClickListener{
             imgView.visibility = View.GONE
         }
@@ -74,14 +88,31 @@ class WritePostFragment : Fragment() {
         saveBtn.setOnClickListener {
             val title = postTitle.text.toString()
             val content = postContent.text.toString()
-            val userName = "User's Name" // 실제 글을 작성한 유저 이름으로 변경해줘야함
+            val postType = if (photoPostBtn.isChecked) "photo" else "normal"
+            val userId = Myapp.getPreferences().getString("loggedInUserId", null)
+          /*  val sharedPref = requireContext().getSharedPreferences("Myapp", Context.MODE_PRIVATE)
+            val userId = sharedPref.getString("userId", null) */
+            if (userId == null) {
+                Toast.makeText(requireContext(), "User ID not found. Please log in again.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+           // val userName = "User's Name" // 실제 글을 작성한 유저 이름으로 변경해줘야함
 
-            val postFragment = PostFragment.newInstance(title, content, userName)
+
+            if (title.isNotEmpty() && content.isNotEmpty()) {
+                savePostToServer(userId, title, content, postType)
+            } else {
+                Toast.makeText(requireContext(), "Title and content cannot be empty", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+
+       /* val postFragment = PostFragment.newInstance(title, content, userName)
             val transaction = requireActivity().supportFragmentManager.beginTransaction()
             transaction.replace(R.id.mainFrameLayout, postFragment)
             transaction.addToBackStack(null)
             transaction.commit()
-        }
+        }*/
 
 
         // 작성일 = 오늘 날짜
@@ -140,6 +171,38 @@ class WritePostFragment : Fragment() {
         return rootView
     }
 
+    private fun savePostToServer(userId: String, title: String, content: String, postType: String) {
+        val postRequest = PostRequest(userId, title, content, postType)
+
+        val postApiService = RetrofitInstance.create(PostApiService::class.java)
+        val call = postApiService.createPost(postRequest)
+        Log.d("PostRequest", "UserId: $userId, Title: $title, Content: $content, PostType: $postType")
+        call.enqueue(object : retrofit2.Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: retrofit2.Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(requireContext(), "Post saved successfully", Toast.LENGTH_SHORT)
+                        .show()
+
+                    // Navigate to another fragment (e.g., PostFragment)
+                    val postFragment = PostFragment.newInstance(title, content, userId)
+                    val transaction = requireActivity().supportFragmentManager.beginTransaction()
+                    transaction.replace(R.id.mainFrameLayout, postFragment)
+                    transaction.addToBackStack(null)
+                    transaction.commit()
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Failed to save post: ${response.message()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
     companion object {
         // TODO: Rename and change types and number of parameters
         @JvmStatic

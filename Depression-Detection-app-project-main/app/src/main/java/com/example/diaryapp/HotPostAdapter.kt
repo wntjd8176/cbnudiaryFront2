@@ -1,12 +1,13 @@
 package com.example.diaryapp
 
-import HotPostItem
+import com.example.diaryapp.HotPostItem
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import android.util.Log
 
 class PostItemsAdapter(
     private val hotPostItems: List<HotPostItem>,
@@ -25,9 +26,13 @@ class PostItemsAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val hotPostItem = hotPostItems[position]
-        holder.postTitle.text = hotPostItem.title
-        holder.username.text = hotPostItem.username
-        holder.writeDate.text = hotPostItem.writeDate
+        holder.postTitle.text = hotPostItem.ptitle
+        holder.username.text = hotPostItem.userID
+        holder.writeDate.text = hotPostItem.postType
+
+        Log.d("PostAdapter", "Binding position $position: Title: ${hotPostItem.ptitle}, User: ${hotPostItem.userID}, Date: ${hotPostItem.postType}")
+
+
 
         holder.itemView.setOnClickListener {
             itemClickListener.onItemClick(position)
@@ -40,7 +45,7 @@ class PostItemsAdapter(
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var postTitle: TextView = itemView.findViewById(R.id.hot_title)
-        var username: TextView = itemView.findViewById(R.id.hot_username)
+        var username: TextView = itemView.findViewById(R.id.hot_userId)
         var writeDate: TextView = itemView.findViewById(R.id.hot_date)
     }
 }

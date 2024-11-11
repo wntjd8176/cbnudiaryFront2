@@ -10,6 +10,13 @@ import android.widget.TextView
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import com.example.diaryapp.Network.RetrofitInstance
+import com.example.diaryapp.Serivce.PostApiService
+import com.example.diaryapp.HotPostItem
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.widget.Toast
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -17,6 +24,8 @@ private const val ARG_PARAM2 = "param2"
 class CommunityFragment : Fragment() {
     private var param1: String? = null
     private var param2: String? = null
+
+    private val hotPostItemList: MutableList<HotPostItem> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,10 +55,10 @@ class CommunityFragment : Fragment() {
         var photoTitle2 = rootView.findViewById<TextView>(R.id.photo_title2)
         var photoTitle3 = rootView.findViewById<TextView>(R.id.photo_title3)
 
-
-        hotTitle1.setText("hot 게시판 타이틀1")
+        fetchHotPosts(hotTitle1, hotTitle2, hotTitle3)
+       /* hotTitle1.setText("hot 게시판 타이틀1")
         hotTitle2.setText("hot 게시판 타이틀2")
-        hotTitle3.setText("hot 게시판 타이틀3")
+        hotTitle3.setText("hot 게시판 타이틀3")*/
 
         photoTitle1.setText("포토 게시판 타이틀1")
         photoTitle2.setText("포토 게시판 타이틀2")
@@ -118,6 +127,30 @@ class CommunityFragment : Fragment() {
         }
 
         return rootView
+    }
+
+    private fun fetchHotPosts(hotTitle1: TextView, hotTitle2: TextView, hotTitle3: TextView) {
+        val postApiService = RetrofitInstance.create(PostApiService::class.java)
+
+        postApiService.getAllPosts().enqueue(object : Callback<List<HotPostItem>> {
+            override fun onResponse(call: Call<List<HotPostItem>>, response: Response<List<HotPostItem>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    hotPostItemList.clear()
+                    hotPostItemList.addAll(response.body()!!)
+
+                    // Set titles for the top 3 hot posts
+                    hotTitle1.text = hotPostItemList.getOrNull(0)?.ptitle ?: "No Title"
+                    hotTitle2.text = hotPostItemList.getOrNull(1)?.ptitle ?: "No Title"
+                    hotTitle3.text = hotPostItemList.getOrNull(2)?.ptitle ?: "No Title"
+                } else {
+                    Toast.makeText(requireContext(), "Failed to load hot posts", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<List<HotPostItem>>, t: Throwable) {
+                Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     companion object {

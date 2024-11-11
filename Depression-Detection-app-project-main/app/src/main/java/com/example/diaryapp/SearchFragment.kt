@@ -9,12 +9,15 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.SearchView
+import com.example.diaryapp.Serivce.DiaryApiService
 
 class SearchFragment : Fragment() {
     private var param1: String? = null
     private lateinit var bottomNavActivity: BottomNavActivity
     private lateinit var listView: ListView
     private lateinit var adapter: ArrayAdapter<String>
+    private val diaryList: MutableList<DiaryApiService.DiaryDTO> = mutableListOf()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,9 +38,9 @@ class SearchFragment : Fragment() {
 
         listView = rootView.findViewById(R.id.searchListView)
 
-        val diaryEntries = test()
+       /* val diaryEntries = test()
         val diaryList: MutableList<String> = mutableListOf()
-
+                                                             */
         activity?.let {
             if (it is BottomNavActivity) {
                 bottomNavActivity = it
@@ -45,8 +48,10 @@ class SearchFragment : Fragment() {
                 throw IllegalStateException("Activity must be of type BottomNavActivity")
             }
         }
+        performSearch(param1.orEmpty())
 
-        for (diaryEntry in diaryEntries) {
+
+        /*for (diaryEntry in diaryEntries) {
             val title = diaryEntry.title
             if (title.contains(param1.orEmpty())) {
                 val contentPreview = if (diaryEntry.content.length > 30) {
@@ -57,14 +62,14 @@ class SearchFragment : Fragment() {
                 val tmp = "${diaryEntry.date}  ${diaryEntry.title}\n$contentPreview"
                 diaryList.add(tmp)
             }
-        }
+        } */
 
-        if (diaryList.isEmpty()) {
+       /* if (diaryList.isEmpty()) {
             diaryList.add("검색된 일기가 없습니다.")
         }
 
         adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, diaryList)
-        listView.adapter = adapter
+        listView.adapter = adapter */
 
         svp.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -79,13 +84,20 @@ class SearchFragment : Fragment() {
         })
 
         listView.setOnItemClickListener { parent, _, position, _ ->
-            var selected = parent.getItemAtPosition(position) as String
-            selected = selected.substring(0,10)
-            Log.i("ListView", "Item clicked: ${selected}")
+            val selectedDiary = diaryList[position]
+           /* var selected = parent.getItemAtPosition(position) as String
+            selected = selected.substring(0,10) */
+            Log.i("ListView", "Item clicked: ${selectedDiary.createdDate}")
 
             try {
                 val transaction = requireActivity().supportFragmentManager.beginTransaction()
-                val diaryFragment = DiaryFragment.newInstance(bottomNavActivity, selected)
+                val diaryFragment = DiaryFragment.newInstance(
+                    bottomNavActivity,
+                    selectedDate = selectedDiary.createdDate,
+                    title = selectedDiary.dtitle,
+                    content = selectedDiary.diaryContent,
+                    emotion = selectedDiary.emotions
+                )
                 transaction.replace(R.id.mainFrameLayout, diaryFragment)
                 bottomNavActivity.setSelectedNavItem(R.id.ic_diary)
                 transaction.addToBackStack(null)
@@ -100,7 +112,8 @@ class SearchFragment : Fragment() {
     }
     private fun performSearch(query: String) {
         val diaryEntries = test()
-        val diaryList: MutableList<String> = mutableListOf()
+        diaryList.clear()
+        val displayList: MutableList<String> = mutableListOf()
 
         for (diaryEntry in diaryEntries) {
             val title = diaryEntry.title
@@ -111,17 +124,19 @@ class SearchFragment : Fragment() {
                     diaryEntry.content
                 }
                 val tmp = "${diaryEntry.date}  ${diaryEntry.title}\n$contentPreview"
-                diaryList.add(tmp)
+                displayList.add(tmp)
             }
         }
 
-        adapter.clear()
+       /* adapter.clear()
         adapter.addAll(diaryList)
         adapter.notifyDataSetChanged()
-
-        if (diaryList.isEmpty()) {
-            diaryList.add("검색된 일기가 없습니다.")
+    */
+        if (displayList.isEmpty()) {
+            displayList.add("검색된 일기가 없습니다.")
         }
+        adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, displayList)
+        listView.adapter = adapter
     }
 
     companion object {

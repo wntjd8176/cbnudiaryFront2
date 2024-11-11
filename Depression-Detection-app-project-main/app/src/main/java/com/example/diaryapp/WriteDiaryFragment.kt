@@ -149,7 +149,10 @@ class WriteDiaryFragment : Fragment() {
                     Log.d("API_RESPONSE", "Response Code: ${response.code()}, Message: ${response.message()}")
                     if (response.isSuccessful)  withContext(Dispatchers.Main) {
                         val transaction = requireActivity().supportFragmentManager.beginTransaction()
-                        val diaryFragment = DiaryFragment.newInstance(bottomNavActivity, selectedDateWD)
+                        val diaryFragment = DiaryFragment.newInstance(bottomNavActivity, diaryDTO.createdDate,
+                            title = diaryDTO.dtitle,
+                            content = diaryDTO.diaryContent,
+                            emotion = diaryDTO.emotions)
                         transaction.replace(R.id.mainFrameLayout, diaryFragment)
                         transaction.commit()
                         Log.d("FRAGMENT_TRANSACTION", "DiaryFragment has been replaced")
@@ -201,6 +204,8 @@ class WriteDiaryFragment : Fragment() {
 
         return rootView
     }
+
+
     companion object {
         private const val ARG_SELECTED_DATE = "selected_date"
         private const val ARG_BOTTOM_NAV_ACTIVITY = "bottom_nav_activity"

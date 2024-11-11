@@ -41,6 +41,7 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -245,3 +246,5 @@
         app:menu="@menu/commu_nav"
         android:layout_gravity="start"/>
 </androidx.drawerlayout.widget.DrawerLayout>
+
+

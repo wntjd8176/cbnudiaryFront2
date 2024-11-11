@@ -1,6 +1,6 @@
 package com.example.diaryapp
 
-import HotPostItem
+import com.example.diaryapp.HotPostItem
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -26,7 +26,7 @@ class CommentAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val commentItem = commentItems[position]
         holder.content.text = commentItem.content
-        holder.username.text = commentItem.username
+        holder.username.text = commentItem.userID
         holder.writeDate.text = commentItem.writeDate
 
         holder.itemView.setOnClickListener {
